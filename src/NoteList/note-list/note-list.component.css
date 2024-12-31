@@ -1,0 +1,24 @@
+
+.main-note-container {
+  width: 100%;
+  padding: 10%;
+}
+
+.note-list-form {
+
+}
+
+.note-list-form-field {
+  width: 80%;
+  padding-right: 15px;
+
+}
+
+.note-mat-list {
+  width: 80%;
+}
+
+.strike-through{
+  counter-increment: item;
+  text-decoration: line-through;
+}

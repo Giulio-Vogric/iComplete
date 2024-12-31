@@ -1,0 +1,74 @@
+<div class="main-note-container">
+<!--  INPUT AREA -->
+  <form class="note-list-form">
+    <mat-form-field class="note-list-form-field" >
+      <mat-label>Note</mat-label>
+      <input
+              name="description"
+              type="text"
+              matInput
+              [(ngModel)]="newNote.description"
+              placeholder="ex.: Buy a carton of Milk!">
+      <button type="button" mat-icon-button matSuffix (click)="showAdvancedMenu()">  <mat-icon>settings</mat-icon> </button>
+    </mat-form-field>
+    <button   mat-fab (click)="addNote()">  <mat-icon>add</mat-icon> </button>
+  </form>
+
+<!-- HIDDEN MENU -->
+  <div [hidden]="advancedMenuIsHidden">
+
+      <div >
+        Priority:
+        <mat-button-toggle-group [(ngModel)]="newNote.priority" name="priority" aria-label="Priority">
+          <mat-button-toggle value="0">Low</mat-button-toggle>
+          <mat-button-toggle value="1">Medium</mat-button-toggle>
+          <mat-button-toggle value="2">High</mat-button-toggle>
+        </mat-button-toggle-group>
+
+      </div>
+
+  </div>
+
+<!-- NOTES LIST -->
+  <mat-action-list class="note-mat-list" >
+<!--    IMPORTANT NOTES-->
+    @for (note of notes; track note) {
+      @if (note.priority == 2) {
+
+        <mat-list-item (click)="toggleCompleted(note)">
+          <mat-checkbox
+            [(ngModel)]="note.completed"
+          >
+            <p [ngClass]="note.completed ? 'strike-through' : ''">{{note.description | titlecase}}</p> <!-- strike the text if the note is signed as completed -->
+          </mat-checkbox>
+
+          <button type="button" matListItemMeta mat-icon-button  (click)="removeNote(note.id)"> <mat-icon>delete</mat-icon> </button>
+        </mat-list-item>
+        <mat-divider/>
+      }
+    }
+
+    <!-- UNINPORTANT NOTES-->
+
+    <button [hidden]="!notes.some(checkPriority)" type="button" style="width: 100%; text-align: center"  (click)="toggleOtherNotes()"> -- {{ otherNotesAreHidden ? "Show" : "Hide"}} Other Notes -- </button>
+
+
+    <div [hidden]="otherNotesAreHidden">
+      @for (note of notes; track note) {
+        @if (note.priority != 2) {
+
+          <mat-list-item (click)="toggleCompleted(note)">
+            <mat-checkbox
+              [(ngModel)]="note.completed"
+            >
+              <p [ngClass]="note.completed ? 'strike-through' : ''">{{note.description | titlecase}}</p> <!-- strike the text if the note is signed as completed -->
+            </mat-checkbox>
+
+            <button type="button" matListItemMeta mat-icon-button  (click)="removeNote(note.id)"> <mat-icon>delete</mat-icon> </button>
+          </mat-list-item>
+          <mat-divider/>
+        }
+      }
+    </div>
+  </mat-action-list>
+</div>
