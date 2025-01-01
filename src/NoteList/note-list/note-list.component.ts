@@ -1,8 +1,5 @@
-import {Component, ElementRef, ViewChild} from '@angular/core';
-import {FormControl,
-  FormGroupDirective,
-  NgForm,
-  Validators,
+import {Component, ViewChild} from '@angular/core';
+import {
   FormsModule,
   ReactiveFormsModule,} from '@angular/forms';
 import {Note} from '../../models/note';
