@@ -22,7 +22,7 @@
         <mat-button-toggle-group [(ngModel)]="newNote.priority" name="priority" aria-label="Priority">
           <mat-button-toggle value="0">Low</mat-button-toggle>
           <mat-button-toggle value="1">Medium</mat-button-toggle>
-          <mat-button-toggle value="2">High</mat-button-toggle>
+          <mat-button-toggle #buttonToggle  value="2">High</mat-button-toggle>
         </mat-button-toggle-group>
 
       </div>
@@ -39,7 +39,7 @@
           <mat-checkbox
             [(ngModel)]="note.completed"
           >
-            <p [ngClass]="note.completed ? 'strike-through' : ''">{{note.description | titlecase}}</p> <!-- strike the text if the note is signed as completed -->
+            <p [ngClass]="note.completed ? 'strike-through' : ''">{{note.description | titlecase}} {{note.priority}}</p> <!-- strike the text if the note is signed as completed -->
           </mat-checkbox>
 
           <button type="button" matListItemMeta mat-icon-button  (click)="removeNote(note.id)"> <mat-icon>delete</mat-icon> </button>
@@ -50,7 +50,7 @@
 
     <!-- UNINPORTANT NOTES-->
 
-    <button [hidden]="!notes.some(checkPriority)" type="button" style="width: 100%; text-align: center"  (click)="toggleOtherNotes()"> -- {{ otherNotesAreHidden ? "Show" : "Hide"}} Other Notes -- </button>
+    <button [hidden]="!notes.some(isLowPriority)" type="button" style="width: 100%; text-align: center" (click)="toggleOtherNotes()"> -- {{ otherNotesAreHidden ? "Show" : "Hide"}} Other Notes -- </button>
 
 
     <div [hidden]="otherNotesAreHidden">
