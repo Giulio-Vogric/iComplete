@@ -1,4 +1,4 @@
-import {Component, ViewChild} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {
   FormsModule,
   ReactiveFormsModule,} from '@angular/forms';
@@ -13,6 +13,7 @@ import {MatListModule} from '@angular/material/list';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonToggle, MatButtonToggleModule} from '@angular/material/button-toggle';
 import {Subject} from 'rxjs';
+import {NoteService} from '../../services/note.service';
 
 
 
@@ -33,7 +34,7 @@ import {Subject} from 'rxjs';
   templateUrl: './note-list.component.html',
   styleUrl: './note-list.component.css'
 })
-export class NoteListComponent {
+export class NoteListComponent implements OnInit{
 
   @ViewChild('buttonToggle', {static: true})
   buttonToggle!: MatButtonToggle;
@@ -45,22 +46,22 @@ export class NoteListComponent {
   advancedMenuIsHidden = true;
   otherNotesAreHidden = true;
 
+  constructor(private noteService: NoteService) {
+  }
+
 
   ngOnInit() {
 
+    this.noteService.getNotes().subscribe((data: Note[]) => {
+      this.notes = data;
+    })
+
     this.prioritizedNotes.subscribe({
       next: data => {
-        if(data > 0 && data < 5) {
 
-          this.updateListPriorities()
+        const NumOfHPNotes = this.updateListPriorities(data)
 
-        if (this.priorityNotesCount(2) < 5) {
-          this.buttonToggle.disabled = false;
-        }
-        } else {
-
-          this.buttonToggle.disabled = true;
-        }
+        this.toggleHighPriorityOption(NumOfHPNotes)
       }
     })
   }
@@ -72,8 +73,10 @@ export class NoteListComponent {
      ***/
     if (this.newNote.description !== '') {
 
-      const note = {...this.newNote};
-      this.notes.push(note);
+      this.noteService.addNote(this.newNote).subscribe((note) => {
+
+        this.notes.push({...note});
+      });
 
       this.newNote = this.initNote()
     }
@@ -91,11 +94,15 @@ export class NoteListComponent {
 
   removeNote(id: string) {
 
-    this.notes = this.notes.filter(note => note.id !== id);
+    this.noteService.removeNote(id).subscribe((note) => {
+
+      this.notes = this.notes.filter(note => note.id !== id);
 
 
-    const numOfPrioritizedNotes = this.priorityNotesCount(2)
-    this.prioritizedNotes.next(numOfPrioritizedNotes)
+      const numOfPrioritizedNotes = this.priorityNotesCount(2)
+      this.prioritizedNotes.next(numOfPrioritizedNotes)
+    });
+
   }
 
 
@@ -115,20 +122,30 @@ export class NoteListComponent {
     return note.priority < 2;
   }
 
-  updateListPriorities() {
+  updateListPriorities(numOfHP: number): number {
     /***
      * Check if there is any note with priority under high (0 and 1) and updates it to high
      * This function is called whenever an item is removed from the priority list and
      * there are less than 5 high priority items
      ***/
-    let nextPrioritizeNoteIndex = this.firstNoteWithPriority(1)
-    if (nextPrioritizeNoteIndex == -1) {
-      nextPrioritizeNoteIndex = this.firstNoteWithPriority(0)
-    }
-    if (nextPrioritizeNoteIndex != -1) {
+    let NumOfHPNotes = numOfHP;
 
-      this.notes[nextPrioritizeNoteIndex].priority = 2;
+    while (NumOfHPNotes < 5) {
+      let nextPrioritizeNoteIndex = this.firstNoteWithPriority(1)
+      if (nextPrioritizeNoteIndex == -1) {``
+        nextPrioritizeNoteIndex = this.firstNoteWithPriority(0)
+      }
+      if (nextPrioritizeNoteIndex != -1) {
+
+        this.notes[nextPrioritizeNoteIndex].priority = 2;
+      }
+      else {
+        return NumOfHPNotes;
+      }
+
+      NumOfHPNotes = this.priorityNotesCount(2);
     }
+    return NumOfHPNotes;
 
   }
 
@@ -138,6 +155,15 @@ export class NoteListComponent {
 
   firstNoteWithPriority(priority: number) {
     return this.notes.findIndex(note => note.priority == priority);
+  }
+
+  toggleHighPriorityOption(NumOfHPNotes: number) {
+    if (NumOfHPNotes < 5) {
+      this.buttonToggle.disabled = false;
+    } else {
+
+      this.buttonToggle.disabled = true;
+    }
   }
 
 
