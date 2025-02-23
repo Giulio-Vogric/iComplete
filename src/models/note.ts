@@ -5,6 +5,7 @@ export interface Note{
   date: Date;
   completed: boolean;
   priority: number;
+  tags: string;
 }
 
 

@@ -1,4 +1,5 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
+import {ENTER, COMMA} from '@angular/cdk/keycodes'
 import {
   FormsModule,
   ReactiveFormsModule,} from '@angular/forms';
@@ -8,11 +9,13 @@ import {MatInputModule} from '@angular/material/input';
 import{v4 as uuid} from 'uuid';
 import { MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
-import {NgClass, TitleCasePipe} from '@angular/common';
+import {JsonPipe, NgClass, TitleCasePipe} from '@angular/common';
 import {MatListModule} from '@angular/material/list';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonToggle, MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatChipEditedEvent, MatChipInputEvent, MatChipsModule} from '@angular/material/chips'
 import {Subject} from 'rxjs';
+
 import {NoteService} from '../../services/note.service';
 
 
@@ -20,7 +23,9 @@ import {NoteService} from '../../services/note.service';
 
 @Component({
   selector: 'app-note-list',
-  imports: [FormsModule,
+  imports: [
+    JsonPipe,
+    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     ReactiveFormsModule,
@@ -30,6 +35,7 @@ import {NoteService} from '../../services/note.service';
     MatListModule,
     MatIconModule,
     MatButtonToggleModule,
+    MatChipsModule,
     TitleCasePipe],
   templateUrl: './note-list.component.html',
   styleUrl: './note-list.component.css'
@@ -43,8 +49,11 @@ export class NoteListComponent implements OnInit{
   maxPrioritizedNotes = 5;
   prioritizedNotes = new Subject<number>;
   newNote: Note = this.initNote()
+  tags = new Set<string>();
   advancedMenuIsHidden = true;
   otherNotesAreHidden = true;
+  readonly addOnBlur = true;
+  readonly separatorKeyCodes = [ENTER, COMMA] as const;
 
   constructor(private noteService: NoteService) {
   }
@@ -53,6 +62,9 @@ export class NoteListComponent implements OnInit{
   ngOnInit() {
 
     this.noteService.getNotes().subscribe((data: Note[]) => {
+      data.forEach(element => {
+        console.log(element.tags);
+      });
       this.notes = data;
     })
 
@@ -73,9 +85,11 @@ export class NoteListComponent implements OnInit{
      ***/
     if (this.newNote.description !== '') {
 
+      this.newNote.tags = JSON.stringify([...this.tags]);
       this.noteService.addNote(this.newNote).subscribe((note) => {
 
         this.notes.push({...note});
+        this.tags.clear();
       });
 
       this.newNote = this.initNote()
@@ -89,7 +103,7 @@ export class NoteListComponent implements OnInit{
 
     const priority = numOfPrioritizedNotes < this.maxPrioritizedNotes-1 ? 2 : 0;
 
-    return {id: uuid(), description: "", completed: false, date: new Date, priority: priority};
+    return {id: uuid(), description: "", completed: false, date: new Date, priority: priority, tags: ''};
   }
 
   removeNote(id: string) {
@@ -166,5 +180,37 @@ export class NoteListComponent implements OnInit{
     }
   }
 
+  addTag(event: MatChipInputEvent){
+    const value = (event.value || '').trim();
+
+    if (value) {
+      this.tags.add(value);
+    }
+    event.chipInput!.clear();
+  }
+
+  removeTag(tag: string){
+
+    if (this.tags.has(tag)) {
+      this.tags.delete(tag)
+    }
+    return [...this.newNote.tags];
+  }
+
+  editTag(tag: string, event: MatChipEditedEvent) {
+    const value = (event.value || '').trim();
+
+    this.removeTag(tag);
+
+    if (value) {
+      this.tags.add(value)
+      return [...this.tags];
+    }
+    return this.tags;
+  }
+
+  parseTags(tags: string) {
+    return JSON.parse(tags);
+  }
 
 }
